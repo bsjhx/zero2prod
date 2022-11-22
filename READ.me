@@ -1,0 +1,27 @@
+# Zero2Prod
+
+## Development tools/CI/CD
+### Cargo watch
+1. `cargo install cargo-watch`
+1. `cargo watch -x check -x test -x run`
+
+### Test coverage
+This will compute code coverage ignoring test functions.
+`cargo tarpaulin --ignore-tests`
+
+### Linter
+In project is used default linter clippy:
+- to install: `rustup component add clippy`
+- to run: `cargo clippy`
+- to run and fail in case of any warning: `cargo clippy -- -D warnings`
+
+### Formatting
+In project is used default formatter rustfmt:
+- to install: `rustup component add rustfmt`
+- to run: `cargo fmt`
+- in pipeline (only to check): `cargo fmt -- --check`
+
+### Security vulnerabilities
+cargo-audit tool to check if vulnerabilities have been reported for any of the crates in the dependency tree of project.
+- to install: `cargo install cargo-audit`
+- to run: `cargo audit`
