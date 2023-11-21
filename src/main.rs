@@ -5,8 +5,8 @@ use zero2prod::startup::run;
 
 use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 use tracing_log::LogTracer;
+use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     LogTracer::init().expect("Failed to set logger");

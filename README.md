@@ -29,3 +29,9 @@ Security Vulnerabilities
 cargo install cargo-audit
 cargo audit
 ```
+
+Removing unused dependencies
+```shell
+cargo install cargo-udeps
+cargo +nightly udeps
+```
