@@ -20,6 +20,7 @@ tracing-log = "0.2.0"
 once_cell = { version = "1", features = [] }
 secrecy = { version = "0.8", features = ["serde"] }
 tracing-actix-web = "0.7"
+serde-aux = "4"
 
 [dependencies.sqlx]
 version = "0.7"
