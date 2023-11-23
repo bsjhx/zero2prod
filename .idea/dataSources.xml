@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="newsletter@localhost" uuid="8b78d298-a9b9-437e-908f-dd6d3ca19a56">
-      <driver-ref>postgresql</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:5432/newsletter</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
     <data-source source="LOCAL" name="newsletter@localhost [2]" uuid="c99e7e46-3625-444e-8afc-ac7dba2bf11e">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
