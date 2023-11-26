@@ -17,9 +17,14 @@ fields(
 subscriber_email = % form.email, subscriber_name = % form.name
 ))]
 pub async fn subscribe(form: Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
+    let name = match SubscriberName::parse(form.0.name) {
+        Ok(name) => name,
+        Err(_) => return HttpResponse::BadRequest().finish(),
+    };
+
     let new_subscriber = NewSubscriber {
         email: form.0.email,
-        name: SubscriberName::parse(form.0.name).expect("Name validation failed."),
+        name,
     };
 
     match insert_subscriber(&pool, &new_subscriber).await {
@@ -51,8 +56,6 @@ pub async fn insert_subscriber(
     .map_err(|e| {
         tracing::error!("Failed to execute query: {:?}", e);
         e
-        // Using the `?` operator to return early
-        // if the function failed, returning a sqlx::Error // We will talk about error handling in depth later!
     })?;
     Ok(())
 }
