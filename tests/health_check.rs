@@ -112,6 +112,7 @@ async fn subscribe_returns_a_400_when_fields_are_present_but_invalid() {
         ("name=Ursula&email=", "empty email"),
         ("name=Ursula&email=definitely-not-an-email", "invalid email"),
     ];
+
     for (body, description) in test_cases {
         // Act
         let response = client
@@ -121,11 +122,12 @@ async fn subscribe_returns_a_400_when_fields_are_present_but_invalid() {
             .send()
             .await
             .expect("Failed to execute request.");
+
         // Assert
         assert_eq!(
             400,
             response.status().as_u16(),
-            "The API did not return a 400 OK when the payload was {}.",
+            "The API did not return a 400 Bad Request when the payload was {}.",
             description
         );
     }
