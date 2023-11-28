@@ -2,3 +2,6 @@ application:
   host: 0.0.0.0
 database:
   require_ssl: true
+email_client:
+  base_url: "https://api.mailersend.com/v1/"
+  sender_email: "rakoczy.michal11@gmail.com"
