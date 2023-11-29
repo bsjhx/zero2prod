@@ -11,3 +11,4 @@ email_client:
   sender_email: "test@gmail.com"
   api_public_key: "public_key"
   api_private_key: "private_key"
+  timeout_milliseconds: 10000

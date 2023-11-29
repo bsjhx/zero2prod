@@ -44,11 +44,9 @@ impl EmailClient {
         sender: SubscriberEmail,
         api_public_key: Secret<String>,
         api_private_key: Secret<String>,
+        timeout: std::time::Duration,
     ) -> Self {
-        let http_client = Client::builder()
-            .timeout(std::time::Duration::from_secs(10))
-            .build()
-            .unwrap();
+        let http_client = Client::builder().timeout(timeout).build().unwrap();
         Self {
             http_client,
             base_url,
@@ -221,6 +219,7 @@ mod tests {
             sender,
             api_public_key_fake.clone(),
             api_private_key_fake.clone(),
+            std::time::Duration::from_millis(200),
         );
         (email_client, api_public_key_fake, api_private_key_fake)
     }
