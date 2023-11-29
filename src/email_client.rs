@@ -1,5 +1,3 @@
-#![allow(non_snake_case)]
-
 use crate::domain::SubscriberEmail;
 use reqwest::{Client, Url};
 use secrecy::{ExposeSecret, Secret};
@@ -14,29 +12,30 @@ pub struct EmailClient {
 }
 
 #[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
 struct Message {
-    From: Sender,
-    To: Vec<Recipient>,
-    Subject: String,
-    TextPart: String,
-    HTMLPart: String,
+    from: Sender,
+    to: Vec<Recipient>,
+    subject: String,
+    text_part: String,
+    html_part: String,
 }
 
 #[derive(Debug, serde::Serialize)]
 struct Sender {
-    Email: String,
-    Name: String,
+    email: String,
+    name: String,
 }
 
 #[derive(Debug, serde::Serialize)]
 struct Recipient {
-    Email: String,
-    Name: String,
+    email: String,
+    name: String,
 }
 
 #[derive(Debug, serde::Serialize)]
 struct Messages {
-    Messages: Vec<Message>,
+    messages: Vec<Message>,
 }
 
 impl EmailClient {
@@ -66,21 +65,21 @@ impl EmailClient {
         let url = format!("{}/email", self.base_url);
 
         let message = Message {
-            From: Sender {
-                Email: self.sender.as_ref().to_owned(),
-                Name: "Sender".to_string(),
+            from: Sender {
+                email: self.sender.as_ref().to_owned(),
+                name: "sender".to_string(),
             },
-            To: vec![Recipient {
-                Email: recipient.as_ref().to_string(),
-                Name: "Recipient".to_string(),
+            to: vec![Recipient {
+                email: recipient.as_ref().to_string(),
+                name: "recipient".to_string(),
             }],
-            Subject: subject.to_owned(),
-            TextPart: text_content.to_owned(),
-            HTMLPart: html_content.to_owned(),
+            subject: subject.to_owned(),
+            text_part: text_content.to_owned(),
+            html_part: html_content.to_owned(),
         };
 
         let request_body = Messages {
-            Messages: vec![message],
+            messages: vec![message],
         };
 
         let builder = self
@@ -110,27 +109,37 @@ mod tests {
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::{Paragraph, Sentence};
     use fake::{Fake, Faker};
-    use secrecy::Secret;
-    use wiremock::matchers::any;
-    use wiremock::{Mock, MockServer, ResponseTemplate};
+    use secrecy::{ExposeSecret, Secret};
+    use serde_json::Value;
+    use wiremock::matchers::{basic_auth, header, method, path};
+    use wiremock::{Mock, MockServer, Request, ResponseTemplate};
 
     #[tokio::test]
     async fn send_email_fires_a_request_to_base_url() {
         // Arrange
         let mock_server = MockServer::start().await;
         let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
+        let api_public_key_fake = Secret::new(Faker.fake());
+        let api_private_key_fake = Secret::new(Faker.fake());
         let email_client = EmailClient::new(
             mock_server.uri(),
             sender,
-            Secret::new(Faker.fake()),
-            Secret::new(Faker.fake()),
+            api_public_key_fake.clone(),
+            api_private_key_fake.clone(),
         );
 
-        Mock::given(any())
-            .respond_with(ResponseTemplate::new(200))
-            .expect(1)
-            .mount(&mock_server)
-            .await;
+        Mock::given(basic_auth(
+            api_public_key_fake.expose_secret(),
+            api_private_key_fake.expose_secret(),
+        ))
+        .and(header("Content-Type", "application/json"))
+        .and(path("/email"))
+        .and(method("POST"))
+        .and(SendEmailBodyMatcher)
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
 
         let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let subject: String = Sentence(1..2).fake();
@@ -140,5 +149,63 @@ mod tests {
         let _ = email_client
             .send_email(subscriber_email, &subject, &content, &content)
             .await;
+    }
+
+    struct SendEmailBodyMatcher;
+
+    impl wiremock::Match for SendEmailBodyMatcher {
+        fn matches(&self, request: &Request) -> bool {
+            let result: Result<Value, _> = serde_json::from_slice(&request.body);
+            return if let Ok(body) = result {
+                self.validate_body(&body)
+            } else {
+                false
+            };
+        }
+    }
+
+    impl SendEmailBodyMatcher {
+        fn validate_body(&self, body: &Value) -> bool {
+            if let Some(messages) = body.get("messages") {
+                self.validate_single_message(messages)
+            } else {
+                false
+            }
+        }
+
+        fn validate_single_message(&self, messages: &Value) -> bool {
+            if let Some(message) = messages.get(0) {
+                self.validate_from(message)
+                    && message.get("Subject").is_some()
+                    && message.get("HtmlPart").is_some()
+                    && message.get("TextPart").is_some()
+            } else {
+                false
+            }
+        }
+
+        fn validate_from(&self, message: &Value) -> bool {
+            return if let Some(from) = message.get("From") {
+                from.get("email").is_some() && from.get("name").is_some()
+            } else {
+                false
+            };
+        }
+
+        fn validate_to(&self, message: &Value) -> bool {
+            return if let Some(to) = message.get("To") {
+                to.is_array() && validate_single_to(to.get(0))
+            } else {
+                false
+            };
+        }
+    }
+
+    fn validate_single_to(to: Option<&Value>) -> bool {
+        return if let Some(to) = to {
+            to.get("email").is_some() && to.get("name").is_some()
+        } else {
+            false
+        };
     }
 }
