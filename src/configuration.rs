@@ -32,6 +32,8 @@ pub struct DatabaseSettings {
 pub struct EmailClientSettings {
     pub base_url: String,
     pub sender_email: String,
+    pub api_public_key: Secret<String>,
+    pub api_private_key: Secret<String>,
 }
 
 impl EmailClientSettings {

@@ -2,12 +2,15 @@
 
 use crate::domain::SubscriberEmail;
 use reqwest::{Client, Url};
+use secrecy::{ExposeSecret, Secret};
 use url::ParseError;
 
 pub struct EmailClient {
     http_client: Client,
     base_url: String,
     sender: SubscriberEmail,
+    api_public_key: Secret<String>,
+    api_private_key: Secret<String>,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -27,8 +30,8 @@ struct Sender {
 
 #[derive(Debug, serde::Serialize)]
 struct Recipient {
-    email: String,
-    name: String,
+    Email: String,
+    Name: String,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -37,11 +40,18 @@ struct Messages {
 }
 
 impl EmailClient {
-    pub fn new(base_url: String, sender: SubscriberEmail) -> Self {
+    pub fn new(
+        base_url: String,
+        sender: SubscriberEmail,
+        api_public_key: Secret<String>,
+        api_private_key: Secret<String>,
+    ) -> Self {
         Self {
             http_client: Client::new(),
             base_url,
             sender,
+            api_public_key,
+            api_private_key,
         }
     }
 
@@ -51,11 +61,9 @@ impl EmailClient {
         subject: &str,
         html_content: &str,
         text_content: &str,
-    ) -> Result<(), String> {
-        let url = match self.create_url() {
-            Ok(url) => url,
-            Err(parse_error) => return Err(format!("URL parsing error: {}", parse_error)),
-        };
+    ) -> Result<(), reqwest::Error> {
+        // let url = self.create_url()?;
+        let url = format!("{}/email", self.base_url);
 
         let message = Message {
             From: Sender {
@@ -75,7 +83,16 @@ impl EmailClient {
             Messages: vec![message],
         };
 
-        let builder = self.http_client.post(url.as_str()).json(&request_body);
+        let builder = self
+            .http_client
+            .post(url.as_str())
+            .basic_auth(
+                self.api_public_key.expose_secret(),
+                Some(self.api_private_key.expose_secret()),
+            )
+            .json(&request_body)
+            .send()
+            .await?;
         Ok(())
     }
 
@@ -92,7 +109,8 @@ mod tests {
     use crate::email_client::EmailClient;
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::{Paragraph, Sentence};
-    use fake::Fake;
+    use fake::{Fake, Faker};
+    use secrecy::Secret;
     use wiremock::matchers::any;
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -101,7 +119,12 @@ mod tests {
         // Arrange
         let mock_server = MockServer::start().await;
         let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-        let email_client = EmailClient::new(mock_server.uri(), sender);
+        let email_client = EmailClient::new(
+            mock_server.uri(),
+            sender,
+            Secret::new(Faker.fake()),
+            Secret::new(Faker.fake()),
+        );
 
         Mock::given(any())
             .respond_with(ResponseTemplate::new(200))
