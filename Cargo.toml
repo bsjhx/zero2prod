@@ -23,6 +23,7 @@ tracing-actix-web = "0.7"
 serde-aux = "4"
 unicode-segmentation = "1"
 validator = "0.16"
+url = "2.4.1"
 
 [dependencies.sqlx]
 version = "0.7"

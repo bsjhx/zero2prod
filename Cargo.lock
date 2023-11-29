@@ -3178,6 +3178,7 @@ dependencies = [
  "tracing-log 0.2.0",
  "tracing-subscriber",
  "unicode-segmentation",
+ "url",
  "uuid",
  "validator",
  "wiremock",

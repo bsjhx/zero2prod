@@ -1,10 +1,39 @@
+#![allow(non_snake_case)]
+
 use crate::domain::SubscriberEmail;
-use reqwest::Client;
+use reqwest::{Client, Url};
+use url::ParseError;
 
 pub struct EmailClient {
     http_client: Client,
     base_url: String,
     sender: SubscriberEmail,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct Message {
+    From: Sender,
+    To: Vec<Recipient>,
+    Subject: String,
+    TextPart: String,
+    HTMLPart: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct Sender {
+    Email: String,
+    Name: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct Recipient {
+    email: String,
+    name: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct Messages {
+    Messages: Vec<Message>,
 }
 
 impl EmailClient {
@@ -23,7 +52,37 @@ impl EmailClient {
         html_content: &str,
         text_content: &str,
     ) -> Result<(), String> {
+        let url = match self.create_url() {
+            Ok(url) => url,
+            Err(parse_error) => return Err(format!("URL parsing error: {}", parse_error)),
+        };
+
+        let message = Message {
+            From: Sender {
+                Email: self.sender.as_ref().to_owned(),
+                Name: "Sender".to_string(),
+            },
+            To: vec![Recipient {
+                Email: recipient.as_ref().to_string(),
+                Name: "Recipient".to_string(),
+            }],
+            Subject: subject.to_owned(),
+            TextPart: text_content.to_owned(),
+            HTMLPart: html_content.to_owned(),
+        };
+
+        let request_body = Messages {
+            Messages: vec![message],
+        };
+
+        let builder = self.http_client.post(url.as_str()).json(&request_body);
         Ok(())
+    }
+
+    fn create_url(&self) -> Result<Url, ParseError> {
+        let base = Url::parse(&self.base_url.as_ref())?;
+        let url = base.join("email")?;
+        Ok(url)
     }
 }
 
