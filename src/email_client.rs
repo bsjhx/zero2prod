@@ -1,8 +1,6 @@
 use crate::domain::SubscriberEmail;
-use reqwest::{Client, Url};
+use reqwest::Client;
 use secrecy::{ExposeSecret, Secret};
-use url::ParseError;
-
 pub struct EmailClient {
     http_client: Client,
     base_url: String,
@@ -95,12 +93,6 @@ impl EmailClient {
             .await?
             .error_for_status()?;
         Ok(())
-    }
-
-    fn create_url(&self) -> Result<Url, ParseError> {
-        let base = Url::parse(&self.base_url.as_ref())?;
-        let url = base.join("email")?;
-        Ok(url)
     }
 }
 
@@ -261,6 +253,7 @@ mod tests {
         fn validate_single_message(&self, messages: &Value) -> bool {
             if let Some(message) = messages.get(0) {
                 self.validate_from(message)
+                    && self.validate_to(message)
                     && message.get("Subject").is_some()
                     && message.get("HtmlPart").is_some()
                     && message.get("TextPart").is_some()
