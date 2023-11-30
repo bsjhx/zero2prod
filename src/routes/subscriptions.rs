@@ -28,15 +28,6 @@ pub async fn subscribe(form: Form<FormData>, pool: web::Data<PgPool>) -> HttpRes
     }
 }
 
-impl TryFrom<FormData> for NewSubscriber {
-    type Error = String;
-    fn try_from(value: FormData) -> Result<Self, Self::Error> {
-        let name = SubscriberName::parse(value.name)?;
-        let email = SubscriberEmail::parse(value.email)?;
-        Ok(Self { email, name })
-    }
-}
-
 #[tracing::instrument(
     name = "Saving new subscriber details in the database",
     skip(new_subscriber, pool)
@@ -47,8 +38,8 @@ pub async fn insert_subscriber(
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
-        INSERT INTO subscriptions (id, email, name, subscribed_at)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO subscriptions (id, email, name, subscribed_at, status)
+        VALUES ($1, $2, $3, $4, 'confirmed')
         "#,
         Uuid::new_v4(),
         new_subscriber.email.as_ref(),
@@ -62,4 +53,13 @@ pub async fn insert_subscriber(
         e
     })?;
     Ok(())
+}
+
+impl TryFrom<FormData> for NewSubscriber {
+    type Error = String;
+    fn try_from(value: FormData) -> Result<Self, Self::Error> {
+        let name = SubscriberName::parse(value.name)?;
+        let email = SubscriberEmail::parse(value.email)?;
+        Ok(Self { email, name })
+    }
 }
