@@ -9,7 +9,7 @@ pub struct EmailClient {
     api_private_key: Secret<String>,
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "PascalCase")]
 struct Message {
     from: Sender,
@@ -19,19 +19,19 @@ struct Message {
     html_part: String,
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct Sender {
     email: String,
     name: String,
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct Recipient {
     email: String,
     name: String,
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct Messages {
     messages: Vec<Message>,
 }
@@ -61,7 +61,6 @@ impl EmailClient {
         html_content: &str,
         text_content: &str,
     ) -> Result<(), reqwest::Error> {
-        // let url = self.create_url()?;
         let url = format!("{}/email", self.base_url);
 
         let message = Message {
