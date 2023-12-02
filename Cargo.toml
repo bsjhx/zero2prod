@@ -24,6 +24,7 @@ serde-aux = "4"
 unicode-segmentation = "1"
 validator = "0.16"
 url = "2.4.1"
+rand = { version = "0.8", features=["std_rng"] }
 
 [dependencies.sqlx]
 version = "0.7"
