@@ -12,8 +12,8 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         .expect(0)
         .mount(&app.email_server)
         .await;
-    // Act
 
+    // Act
     let newsletter_request_body = serde_json::json!({
         "Messages":[{
             "From": {
@@ -35,9 +35,9 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         .send()
         .await
         .expect("Failed to execute request.");
+
     // Assert
     assert_eq!(response.status().as_u16(), 200);
-    // Mock verifies on Drop that we haven't sent the newsletter email
 }
 
 async fn create_unconfirmed_subscriber(app: &TestApp) {
