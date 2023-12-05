@@ -1,5 +1,9 @@
-# cargo watch
-Run check - test - run loop:
+Database migration
+```shell
+SKIP_DOCKER=true ./scripts/init_db.sh
+```
+
+cargo watch:Run check - test - run loop:
 ```shell
 cargo watch -x check -x test -x run
 ```
