@@ -32,6 +32,7 @@ thiserror = "1"
 base64 = "0.21"
 sha3 = "0.9"
 argon2 = { version = "0.4", features = ["std"] }
+home = "0.5.5"
 
 [dev-dependencies]
 claims = "0.7"
