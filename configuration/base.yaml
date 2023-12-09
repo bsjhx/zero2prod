@@ -13,3 +13,5 @@ email_client:
   api_public_key: "public_key"
   api_private_key: "private_key"
   timeout_milliseconds: 10000
+
+redis_uri: "redis://127.0.0.1:6379"
