@@ -42,7 +42,7 @@ pub async fn login(
             };
             FlashMessage::error(e.to_string()).send();
             let response = HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/login"))
+                .insert_header((LOCATION, "/admin/dashboard"))
                 .finish();
             Err(InternalError::from_response(e, response))
         }
