@@ -10,4 +10,6 @@ where
 
 pub fn see_other(location: &str) -> HttpResponse {
     HttpResponse::SeeOther()
+        .insert_header((LOCATION, location))
+        .finish()
 }
