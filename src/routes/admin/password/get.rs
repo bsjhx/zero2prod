@@ -12,14 +12,14 @@ pub async fn change_password_form(
     if session.get_user_id().map_err(e500)?.is_none() {
         return Ok(see_other("/login"));
     };
-
     let mut msg_html = String::new();
     for m in flash_messages.iter() {
         writeln!(msg_html, "<p><i>{}</i></p>", m.content()).unwrap();
     }
-
-    Ok(HttpResponse::Ok().content_type(ContentType::html()).body(
-        r#"<!DOCTYPE html>
+    Ok(HttpResponse::Ok()
+        .content_type(ContentType::html())
+        .body(format!(
+            r#"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -28,7 +28,8 @@ pub async fn change_password_form(
 <body>
     {msg_html}
     <form action="/admin/password" method="post">
-        <label>Current password            <input
+        <label>Current password
+            <input
                 type="password"
                 placeholder="Enter current password"
                 name="current_password"
@@ -52,9 +53,9 @@ pub async fn change_password_form(
         </label>
         <br>
         <button type="submit">Change password</button>
-</form>
+    </form>
     <p><a href="/admin/dashboard">&lt;- Back</a></p>
 </body>
 </html>"#,
-    ))
+        )))
 }

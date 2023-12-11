@@ -17,9 +17,10 @@ pub struct FormData {
 }
 
 #[tracing::instrument(
-skip(form, pool, session),
-fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
+    skip(form, pool, session),
+    fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
 )]
+// We are now injecting `PgPool` to retrieve stored credentials from the database
 pub async fn login(
     form: web::Form<FormData>,
     pool: web::Data<PgPool>,
@@ -33,7 +34,6 @@ pub async fn login(
     match validate_credentials(credentials, &pool).await {
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
-
             session.renew();
             session
                 .insert_user_id(user_id)
